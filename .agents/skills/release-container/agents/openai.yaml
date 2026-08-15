@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Container"
+  short_description: "Prepare and verify SemVer container releases"
+  default_prompt: "Use $release-container to prepare and verify a SemVer Docker Hub release."

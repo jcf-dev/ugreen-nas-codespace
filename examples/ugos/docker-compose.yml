@@ -1,0 +1,38 @@
+# Paste-ready example for UGOS Pro's Docker > Project interface.
+# Before deploying, replace the password and verify the UID, GID, time zone,
+# port, and host workspace path for your NAS. See docs/UGOS_SETUP.md.
+
+name: ugreen-nas-codespace
+
+services:
+  codespace:
+    image: joweenflores/ugreen-nas-codespace:latest
+    container_name: ugreen-codespace
+    hostname: codespace
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      DOCKER_USER: coder
+      HASHED_PASSWORD: ""
+      PASSWORD: CHANGE-ME-TO-A-LONG-UNIQUE-PASSWORD
+      TZ: Etc/UTC
+    ports:
+      - "8443:8080"
+    volumes:
+      # Replace this example with the absolute path shown by UGOS File Manager.
+      - /volume1/docker/ugreen-nas-codespace/workspace:/workspace
+      - codespace-config:/home/coder/.config
+      - codespace-local:/home/coder/.local
+      - codespace-claude:/home/coder/.claude
+      - codespace-codex:/home/coder/.codex
+      - codespace-ssh:/home/coder/.ssh
+      - codespace-gnupg:/home/coder/.gnupg
+    stop_grace_period: 30s
+
+volumes:
+  codespace-config:
+  codespace-local:
+  codespace-claude:
+  codespace-codex:
+  codespace-ssh:
+  codespace-gnupg:

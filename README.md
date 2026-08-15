@@ -40,6 +40,14 @@ public internet.
 
 ## Deploy a published image on UGREEN NAS
 
+For a point-and-click UGOS Pro deployment, follow the complete
+**[UGOS Pro setup guide](docs/UGOS_SETUP.md)**. It uses the standalone,
+paste-ready **[UGOS Docker Compose example](examples/ugos/docker-compose.yml)**
+and covers storage paths, UID/GID permissions, first login, updates, backups,
+remote access, and troubleshooting.
+
+For an SSH or file-based Compose deployment:
+
 1. Download `docker-compose.yml` and `.env.example` into one directory on the
    NAS.
 2. Copy the environment template and create the workspace:
@@ -71,9 +79,8 @@ public internet.
 
 5. Open `http://NAS-LAN-IP:8443` and enter the password from `.env`.
 
-In UGOS Pro, you can alternatively create a Compose/Project stack in the Docker
-app and paste `docker-compose.yml`. UI labels vary between UGOS releases, but
-the environment variables and volume paths are the same.
+UGOS Pro users who prefer the Project editor should use the dedicated example
+rather than pasting the environment-variable-based root file.
 
 ### Build from source
 
@@ -244,10 +251,10 @@ To enable publishing:
    - `DOCKERHUB_TOKEN` (use a Docker Hub access token, not your password)
 3. Merge a pull request into `main`. Direct pushes and force pushes are blocked.
 
-Each release builds `linux/amd64` and `linux/arm64`, publishes `latest`, full
-SemVer, major/minor, major-only, and commit-SHA tags, adds OCI metadata, and
-creates a build provenance attestation. Manually pushed `v*.*.*` tags and manual
-workflow dispatches are also supported.
+Each release builds `linux/amd64` and `linux/arm64`, publishes the exact Git tag
+(`vX.Y.Z`), `latest`, `X.Y.Z`, major/minor, major-only, and commit-SHA tags,
+adds OCI metadata, and creates a build provenance attestation. Manually pushed
+`v*.*.*` tags and manual workflow dispatches are also supported.
 
 ## How this differs from GitHub Codespaces
 
@@ -263,6 +270,7 @@ extensions may be unavailable or licensed only for Microsoft's products.
 ## Project policy
 
 - [Contributing](CONTRIBUTING.md)
+- [UGOS Pro deployment guide](docs/UGOS_SETUP.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security Policy](SECURITY.md)
 - [Support](SUPPORT.md)
@@ -278,5 +286,14 @@ Copyright (C) 2026 UGREEN NAS Codespace contributors.
 Bundled and downloaded tools remain under their respective upstream licenses;
 the AGPL does not relicense those separate works. UGREEN, GitHub, VS Code,
 Cloudflare, Tailscale, Anthropic, OpenAI, and OpenCode are trademarks of their
-respective owners. This community project is not affiliated with or endorsed by
-those companies.
+respective owners.
+
+## Legal disclaimer
+
+This is an independent community project. The project and its repository
+owners and maintainers are not affiliated with, employed by, sponsored by, or
+endorsed by UGREEN, and have not been paid or otherwise compensated by UGREEN
+for developing, maintaining, or promoting this project. Use of the UGREEN name
+describes intended hardware compatibility only and does not imply an official
+relationship, certification, or endorsement. Contributors participate in their
+individual capacities unless they explicitly state otherwise.

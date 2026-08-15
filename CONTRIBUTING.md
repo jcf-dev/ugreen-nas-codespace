@@ -3,6 +3,10 @@
 Thanks for helping improve UGREEN NAS Codespace. Contributions to source,
 documentation, compatibility, security, and reproducible builds are welcome.
 
+Human and AI-assisted contributors should follow [AGENTS.md](AGENTS.md). Native
+Codex and Claude Code repository skills are included for container validation
+and release verification.
+
 ## Before opening a change
 
 1. Search existing issues and pull requests.
