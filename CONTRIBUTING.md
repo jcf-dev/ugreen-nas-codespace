@@ -32,6 +32,9 @@ make verify
 
 Before submitting, verify at least the architecture you have available. State
 whether you tested `linux/amd64`, `linux/arm64`, or only performed static checks.
+Run `scripts/test-onboarding.sh` and
+`node --check extensions/ugreen-onboarding/extension.js` when changing
+first-run setup.
 
 ## Pull requests
 

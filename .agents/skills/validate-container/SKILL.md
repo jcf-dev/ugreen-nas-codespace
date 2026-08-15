@@ -34,6 +34,8 @@ For shell changes:
 ```bash
 shellcheck scripts/*.sh
 bash -n scripts/*.sh
+scripts/test-onboarding.sh
+node --check extensions/ugreen-onboarding/extension.js
 ```
 
 For workflow changes, parse every `.github/workflows/*.yml` file and run
@@ -49,6 +51,9 @@ with `scripts/generate-hashed-password.sh --stdin`, then confirm:
 - `PASSWORD` is rejected and a valid `HASHED_PASSWORD` starts code-server.
 - `/workspace` is writable and code-server explicitly opens that directory.
 - The default editor theme is dark and `/healthz` becomes healthy.
+- The bundled onboarding extension is discoverable in both variants; blank
+  setup preserves files, GitHub clone rejects non-empty workspaces, and the
+  completion marker persists under `.config`.
 - SSH starts only with a valid public key, accepts the matching key, and rejects
   password authentication.
 - The full image contains the documented toolchain.

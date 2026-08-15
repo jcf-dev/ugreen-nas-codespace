@@ -18,6 +18,7 @@ mkdir -p \
   "${code_server_config_dir}" \
   "${HOME}/.config/gh" \
   "${HOME}/.config/opencode" \
+  "${HOME}/.config/ugreen-codespace" \
   "${HOME}/.gnupg" \
   "${HOME}/.local/bin" \
   "${HOME}/.local/share/opencode" \

@@ -5,3 +5,5 @@
 !config/**
 !scripts/
 !scripts/**
+!extensions/
+!extensions/**

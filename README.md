@@ -22,6 +22,7 @@ Two multi-architecture variants are published for `linux/amd64` and
 Both variants include:
 
 - Browser-based VS Code via code-server
+- Guided first-run setup for a blank workspace or a GitHub repository
 - Git, Git LFS, GitHub CLI, key-only SSH, GnuPG, and common terminal tools
 - Python 3, `pip`, `pipx`, and virtual environments
 - NVM with Node.js 24, npm, pnpm, Yarn, and TypeScript
@@ -121,15 +122,43 @@ docker compose -f docker-compose.yml -f compose/build.yml up -d
 The first build downloads the base image, language runtimes, CLI tools, and
 editor extensions, so it can take several minutes.
 
-## First login
+## First-run project setup
 
-Open the integrated terminal in VS Code and configure the tools you use:
+After the first browser login, the editor asks how to prepare `/workspace`:
+
+- **Blank project** uses the mounted workspace as a fresh project folder. It
+  never deletes existing NAS files; if the folder is not empty, it asks before
+  using the files already there.
+- **Clone from GitHub** asks for `OWNER/REPOSITORY` or a `github.com` URL, opens
+  a terminal for GitHub CLI browser authentication, configures Git's credential
+  helper, and clones into the empty workspace. The clone is refused when the
+  folder contains files.
+- **GitLab** is shown as coming soon and does not configure or store anything.
+- **Ask me later** shows the choices again on the next browser session.
+
+For a private repository, follow the one-time code and URL shown in the setup
+terminal. GitHub CLI uses its browser-based OAuth flow. If the repository
+belongs to an organization that enforces SAML SSO, first establish an active
+SSO session and authorize GitHub CLI for that organization; organization policy
+may require an administrator to approve the OAuth app. See GitHub's
+[OAuth authorization and SAML SSO guidance](https://docs.github.com/en/apps/oauth-apps/using-oauth-apps/authorizing-oauth-apps).
+
+The completion marker is retained in `/home/coder/.config`. To choose again,
+open the Command Palette and run **UGREEN Codespace: Reset First-Run Setup**.
+You can also run **UGREEN Codespace: Run First-Run Setup** without resetting
+the saved choice. The equivalent terminal commands are:
+
+```bash
+ugreen-onboard status
+ugreen-onboard reset
+```
+
+After choosing a project, configure your Git identity in the integrated
+terminal:
 
 ```bash
 git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
-gh auth login
-gh auth setup-git
 ```
 
 Then start each AI coding CLI once:
@@ -149,15 +178,20 @@ opencode
   into the persistent `.local` volume. Run `install-ai-tools --upgrade` later
   to refresh them.
 
-Authentication state is retained in named volumes. Do not bake API keys,
-tokens, SSH private keys, or `.env` files into a custom image.
+Authentication state is retained in named volumes. GitHub CLI uses secure
+credential storage when one is available, but may store its OAuth token in its
+configuration file when the container has no credential store. Treat the
+`.config` volume and UGOS administrator access as sensitive. No GitHub token is
+accepted through Compose or baked into the image. Do not bake API keys, tokens,
+SSH private keys, or `.env` files into a custom image. See the
+[GitHub CLI authentication reference](https://cli.github.com/manual/gh_auth_login).
 
 ## Persistent data
 
 | Path | Storage | Purpose |
 | --- | --- | --- |
 | `/workspace` | NAS bind mount | Repositories and project files |
-| `/home/coder/.config` | Named volume | GitHub CLI, OpenCode, and app config |
+| `/home/coder/.config` | Named volume | First-run state, GitHub CLI credentials, OpenCode, and app config |
 | `/home/coder/.local` | Named volume | VS Code data/extensions and OpenCode data |
 | `/home/coder/.claude` | Named volume | Claude Code state |
 | `/home/coder/.codex` | Named volume | Codex state |

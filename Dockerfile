@@ -189,6 +189,7 @@ USER root
 
 COPY --chown=coder:coder config/settings.json /opt/ugreen-codespace/settings.json
 COPY --chown=coder:coder config/code-server.yaml /opt/ugreen-codespace/code-server.yaml
+COPY extensions/ugreen-onboarding /usr/lib/code-server/lib/vscode/extensions/ugreen-codespace-onboarding
 COPY config/sshd_config /opt/ugreen-codespace/sshd_config
 COPY --chown=coder:coder config/bashrc /home/coder/.bashrc
 COPY --chown=coder:coder config/profile /home/coder/.profile
@@ -198,6 +199,7 @@ COPY --chown=coder:coder scripts/init-workspace.sh /home/coder/entrypoint.d/10-i
 COPY scripts/entrypoint.sh /usr/local/bin/ugreen-codespace-entrypoint
 COPY scripts/generate-hashed-password.sh /usr/local/bin/generate-hashed-password
 COPY scripts/install-ai-tools.sh /usr/local/bin/install-ai-tools
+COPY scripts/onboard-project.sh /usr/local/bin/ugreen-onboard
 COPY scripts/ai-tool-wrapper.sh /usr/local/libexec/ugreen-ai-tool-wrapper
 COPY LICENSE /usr/share/licenses/ugreen-nas-codespace/LICENSE
 
@@ -206,6 +208,7 @@ RUN chmod 0755 \
       /usr/local/bin/ugreen-codespace-entrypoint \
       /usr/local/bin/generate-hashed-password \
       /usr/local/bin/install-ai-tools \
+      /usr/local/bin/ugreen-onboard \
       /usr/local/libexec/ugreen-ai-tool-wrapper \
     && chmod 0644 /opt/ugreen-codespace/sshd_config \
     && chmod 0700 /home/coder/.ssh \

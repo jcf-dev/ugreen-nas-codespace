@@ -18,6 +18,9 @@ and Tailscale outside the application image.
 - `.github/workflows/ci.yml` is the required pull-request check.
 - `.github/workflows/release.yml` owns automatic SemVer releases.
 - `.github/workflows/publish.yml` owns multi-architecture Docker Hub tags.
+- `extensions/ugreen-onboarding/` owns the first-run editor experience, and
+  `scripts/onboard-project.sh` owns safe project preparation and GitHub clone
+  behavior.
 - `README.md` and `docs/UGOS_SETUP.md` are end-user documentation.
 
 ## Change rules
@@ -41,6 +44,11 @@ and Tailscale outside the application image.
    is patch.
 8. Work through pull requests. Do not bypass protected `main`, required checks,
    or the no-force-push rule.
+9. Keep onboarding non-destructive: blank setup must preserve existing files,
+   GitHub clone must require an empty workspace, and the completion marker must
+   live in `.config` rather than the repository. Pass no tokens through command
+   arguments, environment variables, Compose, logs, or image layers. GitLab is
+   unsupported until its authentication and clone path are implemented.
 
 ## Validation
 
@@ -55,6 +63,8 @@ docker compose -f docker-compose.yml -f compose/build.yml config --quiet
 docker compose -f examples/ugos/docker-compose.yml config --quiet
 shellcheck scripts/*.sh
 bash -n scripts/*.sh
+scripts/test-onboarding.sh
+node --check extensions/ugreen-onboarding/extension.js
 ```
 
 For image or runtime changes, build both `IMAGE_VARIANT=full` and

@@ -19,6 +19,9 @@ Confirm these invariants:
 - The Docker socket remains opt-in.
 - Cloudflare Tunnel and Tailscale remain outside the image.
 - The root Compose file, UGOS example, environment template, and docs agree.
+- The onboarding extension is bundled in both variants, preserves existing
+  files for blank setup, clones only into an empty workspace, and stores its
+  completion marker under `.config`.
 - Multi-architecture support is not broken.
 - Full and slim release tags stay aligned.
 
