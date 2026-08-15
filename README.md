@@ -278,5 +278,14 @@ Copyright (C) 2026 UGREEN NAS Codespace contributors.
 Bundled and downloaded tools remain under their respective upstream licenses;
 the AGPL does not relicense those separate works. UGREEN, GitHub, VS Code,
 Cloudflare, Tailscale, Anthropic, OpenAI, and OpenCode are trademarks of their
-respective owners. This community project is not affiliated with or endorsed by
-those companies.
+respective owners.
+
+## Legal disclaimer
+
+This is an independent community project. The project and its repository
+owners and maintainers are not affiliated with, employed by, sponsored by, or
+endorsed by UGREEN, and have not been paid or otherwise compensated by UGREEN
+for developing, maintaining, or promoting this project. Use of the UGREEN name
+describes intended hardware compatibility only and does not imply an official
+relationship, certification, or endorsement. Contributors participate in their
+individual capacities unless they explicitly state otherwise.
