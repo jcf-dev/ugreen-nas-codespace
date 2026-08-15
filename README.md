@@ -124,7 +124,9 @@ editor extensions, so it can take several minutes.
 
 ## First-run project setup
 
-After the first browser login, the editor asks how to prepare `/workspace`:
+After the first browser login, the editor asks how to prepare `/workspace`.
+The chooser uses native VS Code controls and codicons, so it automatically
+matches the active code-server theme, keyboard navigation, and accessibility:
 
 - **Blank project** uses the mounted workspace as a fresh project folder. It
   never deletes existing NAS files; if the folder is not empty, it asks before

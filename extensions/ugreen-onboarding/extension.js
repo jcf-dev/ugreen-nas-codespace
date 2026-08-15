@@ -56,7 +56,7 @@ async function useBlankWorkspace() {
 
 async function cloneFromGitHub() {
   const repository = await vscode.window.showInputBox({
-    title: 'Clone a GitHub repository',
+    title: 'UGREEN NAS Codespace · GitHub',
     prompt: 'Enter OWNER/REPOSITORY or a github.com repository URL',
     placeHolder: 'octocat/Hello-World',
     ignoreFocusOut: true,
@@ -75,21 +75,15 @@ async function cloneFromGitHub() {
     return;
   }
 
-  const proceed = await vscode.window.showInformationMessage(
-    'A terminal will open for GitHub browser sign-in when needed. Private organization repositories may also require approval through the organization\'s SAML SSO page.',
-    { modal: true },
-    'Continue'
-  );
-  if (proceed !== 'Continue') {
-    return;
-  }
-
   const terminal = vscode.window.createTerminal({
     name: 'GitHub project setup',
     shellPath: '/usr/local/bin/ugreen-onboard',
     shellArgs: ['github', repository.trim()]
   });
   terminal.show();
+  await vscode.window.showInformationMessage(
+    'Continue project setup in the terminal. GitHub will request browser sign-in when needed.'
+  );
 }
 
 async function runOnboarding(force = false) {
@@ -100,30 +94,48 @@ async function runOnboarding(force = false) {
   const selection = await vscode.window.showQuickPick(
     [
       {
+        label: 'Project source',
+        kind: vscode.QuickPickItemKind.Separator
+      },
+      {
         label: '$(new-folder) Blank project',
-        description: 'Start with the mounted /workspace folder',
+        description: 'Create or use /workspace',
+        detail: 'Keeps every existing NAS file and asks before using a non-empty folder.',
         mode: 'blank'
       },
       {
         label: '$(github) Clone from GitHub',
-        description: 'Browser sign-in supports public and private repositories',
+        description: 'Public or private repository',
+        detail: 'Uses GitHub CLI browser sign-in and supports organization SAML SSO.',
         mode: 'github'
+      },
+      {
+        label: 'Future providers',
+        kind: vscode.QuickPickItemKind.Separator
       },
       {
         label: '$(git-branch) GitLab',
         description: 'Coming soon',
+        detail: 'GitLab authentication and cloning are not enabled yet.',
         mode: 'gitlab'
       },
       {
+        label: 'Other',
+        kind: vscode.QuickPickItemKind.Separator
+      },
+      {
         label: '$(clock) Ask me later',
-        description: 'Show this prompt at the next browser session',
+        description: 'Decide next time',
+        detail: 'Shows this native setup picker again in the next browser session.',
         mode: 'later'
       }
     ],
     {
-      title: 'Set up your first project',
-      placeHolder: 'Choose how to prepare /workspace',
-      ignoreFocusOut: true
+      title: 'UGREEN NAS Codespace',
+      placeHolder: 'How would you like to start?',
+      ignoreFocusOut: true,
+      matchOnDescription: true,
+      matchOnDetail: true
     }
   );
 

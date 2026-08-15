@@ -118,7 +118,8 @@ opens `/workspace`, which is the persistent NAS folder you mounted. Using the
 absolute mount prevents the Project's own `docker-compose.yml` from being
 opened as an accidental, read-only workspace on first launch.
 
-The editor now asks how to prepare the project:
+The editor now asks how to prepare the project in a native VS Code-themed
+chooser:
 
 1. Choose **Blank project** for a fresh folder. This choice never deletes NAS
    files; if the workspace already contains files, the editor asks before using

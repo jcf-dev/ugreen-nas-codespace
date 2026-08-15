@@ -49,6 +49,9 @@ and Tailscale outside the application image.
    live in `.config` rather than the repository. Pass no tokens through command
    arguments, environment variables, Compose, logs, or image layers. GitLab is
    unsupported until its authentication and clone path are implemented.
+10. Build onboarding with native VS Code controls, codicons, notifications, and
+    integrated terminals so it inherits code-server themes and accessibility.
+    Do not replace the first-run picker with a custom HTML/CSS webview.
 
 ## Validation
 
