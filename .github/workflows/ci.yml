@@ -133,6 +133,27 @@ jobs:
             coder@127.0.0.1 \
             'test -w /workspace && node --version && python3 --version'
 
+      - name: Scan full image for fixable critical and high vulnerabilities
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3 # v1
+        with:
+          command: cves
+          image: local://local/ugreen-nas-codespace:ci-full
+          only-fixed: true
+          only-severities: critical,high
+          vex-location: .vex
+          sarif-file: scout-full.sarif
+          dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
+          write-comment: false
+
+      - name: Enforce full-image vulnerability policy
+        env:
+          ACCEPTED_VEX_CVE: CVE-2026-34040
+        run: |
+          jq --exit-status --arg accepted "$ACCEPTED_VEX_CVE" '
+            [.runs[].results[] | select(.ruleId != $accepted)] | length == 0
+          ' scout-full.sarif
+
       - name: Build slim amd64 image
         uses: docker/build-push-action@v7
         with:
@@ -181,3 +202,15 @@ jobs:
               test -x "$HOME/.local/bin/codex"
               test -x "$HOME/.local/bin/opencode"
             '
+
+      - name: Scan slim image for fixable critical and high vulnerabilities
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3 # v1
+        with:
+          command: cves
+          image: local://local/ugreen-nas-codespace:ci-slim
+          only-fixed: true
+          only-severities: critical,high
+          exit-code: true
+          dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
+          write-comment: false

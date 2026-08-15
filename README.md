@@ -120,7 +120,15 @@ docker compose -f docker-compose.yml -f compose/build.yml up -d
 ```
 
 The first build downloads the base image, language runtimes, CLI tools, and
-editor extensions, so it can take several minutes.
+editor extensions, so it can take several minutes. Security-sensitive Go CLIs
+are rebuilt from pinned upstream release commits with the patched Go toolchain.
+The final filesystem is flattened so removed or replaced base-image binaries
+are not retained in image history or reported as active packages by scanners.
+
+Pull requests build and scan both image variants with Docker Scout. CI rejects
+fixable critical or high-severity findings before a change can merge, except
+for a repository-reviewed OpenVEX assessment when the vulnerable code is not
+in the image's execution path.
 
 ## First-run project setup
 

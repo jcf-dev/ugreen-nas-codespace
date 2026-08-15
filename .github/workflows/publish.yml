@@ -110,6 +110,19 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
 
+      - name: Attach Docker Scout VEX assessment
+        if: matrix.variant == 'full'
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3 # v1
+        with:
+          command: attestation-add
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/ugreen-nas-codespace@${{ steps.push.outputs.digest }}
+          file: .vex/CVE-2026-34040.vex.json
+          predicate-type: https://openvex.dev/ns/v0.2.0
+          dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry-write-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry-write-password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Attest build provenance
         uses: actions/attest@v4
         with:
