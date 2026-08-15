@@ -28,15 +28,17 @@ Ensure the pull-request title expresses the intended increment before merge.
 2. Review `.github/workflows/release.yml` and `publish.yml` if either changed.
 3. Confirm Docker Hub secrets are referenced only through GitHub Actions and
    are not printed.
-4. Confirm tag generation includes `vX.Y.Z`, `X.Y.Z`, `X.Y`, `X`, `latest`, and
-   `sha-<short-sha>`.
+4. Confirm the full tag set includes `vX.Y.Z`, `X.Y.Z`, `X.Y`, `X`, `latest`,
+   and `sha-<short-sha>`. Confirm the slim set includes `vX.Y.Z-slim`,
+   `X.Y.Z-slim`, `X.Y-slim`, `X-slim`, `slim`, and `sha-<short-sha>-slim`.
 
 ## Post-merge verification
 
 1. Watch the Semantic release workflow through completion.
 2. Confirm the GitHub Release targets the merged `main` commit.
-3. Inspect the Docker Hub manifest for the exact Git tag and `latest`.
-4. Confirm the manifest contains both `linux/amd64` and `linux/arm64` images.
+3. Inspect Docker Hub manifests for the exact Git tag, `latest`, exact slim tag,
+   and `slim`.
+4. Confirm both variant manifests contain `linux/amd64` and `linux/arm64`.
 5. Confirm build provenance attestation completed.
 
 If publishing fails, diagnose the run before rerunning it. Prefer GitHub's

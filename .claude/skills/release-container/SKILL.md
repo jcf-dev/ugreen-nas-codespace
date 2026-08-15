@@ -12,9 +12,10 @@ minor, and all other Conventional Commit types are patch. The first release is
 
 Before merge, require the `validate` check and ensure workflow secrets are never
 printed. After merge, watch the Semantic release workflow, verify the GitHub
-Release targets the merged commit, and inspect Docker Hub for `vX.Y.Z`,
-`X.Y.Z`, `X.Y`, `X`, `latest`, and `sha-<short-sha>`. Confirm both
-`linux/amd64` and `linux/arm64` and the provenance attestation.
+Release targets the merged commit, and inspect Docker Hub for the full tags
+`vX.Y.Z`, `X.Y.Z`, `X.Y`, `X`, `latest`, and `sha-<short-sha>`, plus matching
+`-slim` tags and floating `slim`. Confirm both `linux/amd64` and `linux/arm64`
+for both variants and the provenance attestations.
 
 If publishing fails, diagnose and rerun the existing version. Do not invent a
 replacement tag or move an existing tag without explicit maintainer direction.

@@ -1,0 +1,33 @@
+Port 2222
+ListenAddress 0.0.0.0
+AddressFamily any
+
+HostKey /home/coder/.local/state/ugreen-codespace/sshd/ssh_host_ed25519_key
+PidFile /home/coder/.local/state/ugreen-codespace/sshd/sshd.pid
+AuthorizedKeysFile %h/.ssh/authorized_keys.environment
+
+AuthenticationMethods publickey
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+PermitRootLogin no
+UsePAM no
+
+AllowAgentForwarding yes
+AllowTcpForwarding yes
+GatewayPorts no
+PermitTunnel no
+X11Forwarding no
+
+ClientAliveInterval 60
+ClientAliveCountMax 3
+PrintMotd no
+UseDNS no
+LogLevel INFO
+
+# sshd uses its own restricted default PATH for non-interactive commands.
+# Preserve the image toolchain for terminals and VS Code Remote-SSH sessions.
+SetEnv NVM_DIR=/usr/local/share/nvm PATH=/usr/local/share/nvm/current/bin:/home/coder/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+Subsystem sftp internal-sftp

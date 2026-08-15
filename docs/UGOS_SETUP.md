@@ -42,6 +42,35 @@ file-permission interface already gives you the correct ownership information.
 
 ## 3. Create the Docker Project
 
+Before opening the Project editor, generate a Compose-safe password hash. If
+you cloned this repository on a computer with Docker, run:
+
+```bash
+./scripts/generate-hashed-password.sh
+```
+
+Without a clone, run the generator from the published image:
+
+```bash
+docker run --rm -it \
+  --entrypoint /usr/local/bin/generate-hashed-password \
+  joweenflores/ugreen-nas-codespace:latest
+```
+
+The prompt hides your input and prints a line beginning with
+`HASHED_PASSWORD=$$argon2id$$`. Save the original password in your password
+manager. The project stores only its hash.
+
+For optional terminal and desktop VS Code access, create a dedicated key on
+your laptop and display its public half:
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/ugreen_codespace -C ugreen-codespace
+cat ~/.ssh/ugreen_codespace.pub
+```
+
+Never copy the private key to the NAS or paste it into Compose.
+
 1. Open **Docker** in UGOS Pro.
 2. Open **Project**, select **Create**, and choose a project name such as
    `ugreen-nas-codespace`.
@@ -50,24 +79,30 @@ file-permission interface already gives you the correct ownership information.
    into the Compose configuration editor.
 4. Before deployment, edit these values in the configuration:
 
-   - Replace `CHANGE-ME-TO-A-LONG-UNIQUE-PASSWORD` with a long, unique
-     code-server password.
+   - In the generator output, copy everything after `HASHED_PASSWORD=`. Replace
+     the hash placeholder between the Compose quotation marks with that value,
+     preserving every doubled `$$`.
+   - Replace the SSH public-key placeholder with the complete `.pub` line. If
+     you do not want SSH, set `ENABLE_SSH` to `"false"`; an empty key also keeps
+     the SSH server stopped.
    - Replace the example `/volume1/.../workspace` source path with the absolute
      path prepared in step 2.
    - Change `user: "1000:1000"` if your workspace owner has another UID/GID.
    - Set `TZ` to an IANA time zone such as `Asia/Manila`.
    - Change host port `8443` if another application already uses it. Keep the
      container-side port `8080` unchanged.
+   - Change host port `2222` if needed. Keep container port `2222` unchanged.
    - For reproducible upgrades, replace `latest` with a published version such
-     as `v0.1.1` after checking the Releases page.
+     as `v1.0.0` after checking the Releases page. Use `slim` or
+     `vX.Y.Z-slim` when download and disk size matter more than bundled extras.
 
 5. Select **Deploy Now**. The first deployment downloads both the image and its
    platform-specific layers, so it can take a few minutes.
 
-Anyone who can view the Project configuration can see its plain-text password.
-Limit access to the UGOS administrator interface. Advanced users can use the
-root [`docker-compose.yml`](../docker-compose.yml) with a protected `.env` file,
-or set `HASHED_PASSWORD` as described in the main README.
+The image does not accept plaintext password configuration. Still limit access
+to the UGOS administrator interface because the stored hash is authentication
+material. Advanced users can use the root
+[`docker-compose.yml`](../docker-compose.yml) with a protected `.env` file.
 
 ## 4. Open the browser IDE
 
@@ -78,8 +113,10 @@ Then browse from the same network to:
 http://YOUR-NAS-LAN-IP:8443
 ```
 
-Enter the password from the Project configuration. The editor opens
-`/workspace`, which is the persistent NAS folder you mounted.
+Enter the original password used to generate the hash. The dark-themed editor
+opens `/workspace`, which is the persistent NAS folder you mounted. Using the
+absolute mount prevents the Project's own `docker-compose.yml` from being
+opened as an accidental, read-only workspace on first launch.
 
 Open the integrated terminal and configure Git and the CLIs you use:
 
@@ -98,7 +135,34 @@ stored in Docker named volumes. They survive Project recreation, but deleting
 the named volumes removes that retained configuration and may remove stored
 credentials.
 
-## 5. Update and back up
+On the slim image, the first `claude`, `codex`, or `opencode` command installs
+all three tools into the persistent `.local` volume. This one-time download can
+take a few minutes. Run `install-ai-tools --upgrade` to update them later.
+
+## 5. Connect with SSH or desktop VS Code
+
+After setting `SSH_AUTHORIZED_KEY`, connect from the laptop that owns the
+matching private key:
+
+```bash
+ssh -i ~/.ssh/ugreen_codespace -p 2222 coder@YOUR-NAS-LAN-IP
+```
+
+For a convenient saved target, add this to the laptop's `~/.ssh/config`:
+
+```sshconfig
+Host ugreen-codespace
+  HostName YOUR-NAS-LAN-OR-TAILSCALE-IP
+  User coder
+  Port 2222
+  IdentityFile ~/.ssh/ugreen_codespace
+```
+
+Then run `ssh ugreen-codespace`. In desktop VS Code, install **Remote - SSH**,
+run **Remote-SSH: Connect to Host**, choose `ugreen-codespace`, and open
+`/workspace`. Password-based SSH and root login are disabled.
+
+## 6. Update and back up
 
 Back up the NAS `workspace` folder and the project volumes before major changes.
 Do not delete volumes unless you intend to erase retained editor and CLI state.
@@ -115,12 +179,12 @@ docker compose up -d
 Pin the image to `vX.Y.Z` when you prefer controlled upgrades. Change the tag
 only after reviewing the corresponding GitHub Release.
 
-## 6. Configure access away from home
+## 7. Configure access away from home
 
-Do not forward port `8443` directly from the router to the internet. Keep
-code-server password authentication enabled and use a separately managed
-Tailscale connection or Cloudflare Tunnel with an identity policy. Follow the
-[remote-access guidance in the README](../README.md#remote-access); neither
+Do not forward ports `8443` or `2222` directly from the router to the internet.
+Keep code-server authentication enabled and use a separately managed Tailscale
+connection or Cloudflare Tunnel with an identity policy. Follow the
+[away-from-home guidance in the README](../README.md#access-away-from-home); neither
 service belongs in this application image or Compose example.
 
 ## Troubleshooting
@@ -140,9 +204,15 @@ grant that account read/write access in UGOS.
 
 ### The container repeatedly restarts
 
-Open the container log in Docker. The image intentionally exits when both
-`PASSWORD` and `HASHED_PASSWORD` are empty. Restore one authentication value and
-redeploy.
+Open the container log in Docker. The image intentionally exits when
+`HASHED_PASSWORD` is empty, malformed, or still a placeholder, and it rejects
+the `PASSWORD` variable. Generate a valid hash and redeploy.
+
+### SSH does not start
+
+Confirm `ENABLE_SSH` is `"true"`, `SSH_AUTHORIZED_KEY` contains one complete
+supported public-key line, and host port `2222` is free. Inspect the container
+log for a rejected key. Never use a private key as this value.
 
 ### A CLI login disappeared
 

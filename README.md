@@ -9,17 +9,30 @@ This project is designed for `linux/amd64` and `linux/arm64`. It does not instal
 Cloudflare Tunnel or Tailscale in the application image; both are documented as
 external access options below.
 
-## Included
+## Choose an image
+
+Two multi-architecture variants are published for `linux/amd64` and
+`linux/arm64`:
+
+| Tag | Best for | Contents |
+| --- | --- | --- |
+| `latest` or `vX.Y.Z` | A ready-to-use workstation | Core tools, AI CLIs, `uv`, Docker clients, build tools, and editor extensions |
+| `slim` or `vX.Y.Z-slim` | Smaller downloads and storage use | Core tools; AI CLIs install into the persistent `.local` volume on first use |
+
+Both variants include:
 
 - Browser-based VS Code via code-server
-- Git, Git LFS, GitHub CLI, SSH, GnuPG, and common terminal tools
-- Python 3, `pip`, `pipx`, virtual environments, and `uv`
+- Git, Git LFS, GitHub CLI, key-only SSH, GnuPG, and common terminal tools
+- Python 3, `pip`, `pipx`, and virtual environments
 - NVM with Node.js 24, npm, pnpm, Yarn, and TypeScript
-- Claude Code (`claude`) installed from `@anthropic-ai/claude-code`
-- OpenAI Codex CLI (`codex`) installed from `@openai/codex`
-- OpenCode CLI (`opencode`) installed from `opencode-ai`
-- Docker, Buildx, and Compose **clients** for optional access to the NAS daemon
-- Python, Ruff, ESLint, Prettier, YAML, and TOML editor extensions
+- A dark editor theme and an explicit, writable `/workspace`
+- Claude Code (`claude`), OpenAI Codex CLI (`codex`), and OpenCode CLI
+
+The full image also bundles `uv`, Docker/Buildx/Compose **clients**, common
+native build tools, all three AI CLIs, and Python/Ruff/ESLint/Prettier/YAML/TOML
+editor extensions. The slim image omits those optional components. Its
+`claude`, `codex`, or `opencode` command installs all three CLIs on first use;
+the installation persists in `/home/coder/.local`.
 
 The image intentionally does not include Docker Engine, Cloudflare Tunnel, or
 Tailscale.
@@ -32,7 +45,8 @@ You need:
 - Docker Compose v2, either through the NAS interface or an SSH shell
 - A writable NAS directory for source code
 - At least 2 CPU cores and 4 GB RAM available; more is useful for large builds
-- A strong code-server password, even when using a VPN or identity-aware proxy
+- A strong code-server password from which to generate the required Argon2id
+  hash, even when using a VPN or identity-aware proxy
 
 This is a trusted, single-user development container. The `coder` account has
 passwordless `sudo` inside the container. Do not expose it directly to the
@@ -48,28 +62,39 @@ remote access, and troubleshooting.
 
 For an SSH or file-based Compose deployment:
 
-1. Download `docker-compose.yml` and `.env.example` into one directory on the
-   NAS.
-2. Copy the environment template and create the workspace:
+1. Clone this repository into one NAS directory, or download
+   `docker-compose.yml`, `.env.example`, and
+   `scripts/generate-hashed-password.sh` while preserving that script path.
+2. Copy the environment template and create an absolute workspace path:
 
    ```bash
    cp .env.example .env
-   mkdir -p workspace
+   mkdir -p /volume1/docker/ugreen-nas-codespace/workspace
    chmod 600 .env
    ```
 
-3. Edit `.env`:
+3. Generate the password hash locally. The password is read without echoing and
+   is never written to `.env`:
+
+   ```bash
+   ./scripts/generate-hashed-password.sh
+   ```
+
+   Paste the complete `HASHED_PASSWORD=...` output over the empty line in
+   `.env`. The doubled `$$` characters are required by Docker Compose.
+
+4. Edit the remaining `.env` values:
 
    - Keep `IMAGE_NAME=joweenflores/ugreen-nas-codespace:latest`, or select a
-     published semantic version for reproducible deployments.
-   - Replace `PASSWORD` with a long, unique password.
+     published semantic version for reproducible deployments. Use `:slim` for
+     the smaller variant.
    - Set `PUID` and `PGID` to the owner of the NAS workspace. From SSH, use
      `id` to inspect your user and group IDs.
-   - Set `WORKSPACE_PATH` to an absolute NAS path if you do not want the default
-     `./workspace` directory.
+   - Set `WORKSPACE_PATH` to the existing absolute NAS path created above.
+   - Set `SSH_AUTHORIZED_KEY` to one public key, or set `ENABLE_SSH=false`.
    - Change `TZ`, `WEB_PORT`, and `BIND_ADDRESS` if needed.
 
-4. Pull and start:
+5. Pull and start:
 
    ```bash
    docker compose pull
@@ -77,7 +102,8 @@ For an SSH or file-based Compose deployment:
    docker compose ps
    ```
 
-5. Open `http://NAS-LAN-IP:8443` and enter the password from `.env`.
+6. Open `http://NAS-LAN-IP:8443` and enter the original password used to
+   generate the hash. The original password is not stored in Compose.
 
 UGOS Pro users who prefer the Project editor should use the dedicated example
 rather than pasting the environment-variable-based root file.
@@ -85,7 +111,7 @@ rather than pasting the environment-variable-based root file.
 ### Build from source
 
 Clone the repository, set `IMAGE_NAME=ugreen-nas-codespace:local` in `.env`, and
-use the build override:
+use the build override. Set `IMAGE_VARIANT=slim` to build the smaller variant:
 
 ```bash
 docker compose -f docker-compose.yml -f compose/build.yml build --pull
@@ -119,6 +145,9 @@ opencode
   [official Codex CLI guide](https://learn.chatgpt.com/docs/codex/cli).
 - In OpenCode, use `/connect` to select and authenticate an LLM provider. See
   the [OpenCode setup guide](https://dev.opencode.ai/docs/).
+- On the slim image, the first of these commands downloads all three AI CLIs
+  into the persistent `.local` volume. Run `install-ai-tools --upgrade` later
+  to refresh them.
 
 Authentication state is retained in named volumes. Do not bake API keys,
 tokens, SSH private keys, or `.env` files into a custom image.
@@ -139,21 +168,64 @@ Back up the workspace directory and named volumes before migrating the NAS.
 `docker compose down` keeps them; `docker compose down --volumes` deletes the
 named volumes and therefore removes retained tool configuration and credentials.
 
-## Password options
+## Password authentication
 
-The container refuses to start unless `PASSWORD` or `HASHED_PASSWORD` is set.
-The straightforward setup stores `PASSWORD` in `.env`, so protect that file with
-mode `0600` and restrict who can read the Compose project.
+Only `HASHED_PASSWORD` is accepted. The container rejects `PASSWORD` and exits
+if the required Argon2i/Argon2id hash is absent or malformed. Generate a
+Compose-safe Argon2id value with:
 
-code-server also accepts an Argon2 value in `HASHED_PASSWORD`. Follow the
-[official hashed-password instructions](https://coder.com/docs/code-server/FAQ#can-i-store-my-password-hashed).
-When placing an Argon2 hash in a Compose `.env` file, escape every `$` as `$$`.
-The hashed value takes precedence over `PASSWORD`.
+```bash
+./scripts/generate-hashed-password.sh
+```
 
-## Remote access
+The script uses a local `argon2` command when available, otherwise it uses a
+one-off container. It never prints the original password. For automation only,
+it also accepts a password on standard input with `--stdin`; avoid shell command
+arguments because they may be recorded in history or process listings.
 
-Keep code-server authentication enabled with either option. A tunnel or VPN
-protects network access but does not replace the IDE password.
+Protect `.env` with mode `0600`. A password hash is safer to store than its
+plaintext source, but it is still authentication material and can be attacked
+offline. Use a long, unique password. See code-server's
+[official hashed-password guidance](https://coder.com/docs/code-server/FAQ#can-i-store-my-password-hashed).
+
+## SSH from a terminal or desktop VS Code
+
+The image includes a non-root SSH server on container port `2222`. It accepts
+public keys only: SSH passwords, keyboard-interactive authentication, empty
+passwords, and root login are disabled.
+
+1. Create a dedicated key on your laptop if you do not already have one:
+
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/ugreen_codespace -C ugreen-codespace
+   cat ~/.ssh/ugreen_codespace.pub
+   ```
+
+2. Paste that single public-key line into `SSH_AUTHORIZED_KEY` in `.env`. Never
+   copy the private key to the NAS or container. Redeploy with
+   `docker compose up -d`.
+3. Add a laptop-side `~/.ssh/config` entry:
+
+   ```sshconfig
+   Host ugreen-codespace
+     HostName NAS-LAN-OR-TAILSCALE-IP
+     User coder
+     Port 2222
+     IdentityFile ~/.ssh/ugreen_codespace
+   ```
+
+4. Connect with `ssh ugreen-codespace`, or install Microsoft's **Remote - SSH**
+   extension in desktop VS Code and run **Remote-SSH: Connect to Host**.
+
+The browser editor and SSH sessions both open the same `/workspace`. If you do
+not need SSH, set `ENABLE_SSH=false`; when no authorized key is configured, the
+SSH server does not start.
+
+## Access away from home
+
+Keep code-server hash authentication enabled. A tunnel or VPN protects network
+access but does not replace the IDE password. Do not directly forward either
+the web port or SSH port from your router to the public internet.
 
 ### Tailscale
 
@@ -162,6 +234,8 @@ separately managed container. Do not add it to this development image.
 
 - Simple private access: keep `BIND_ADDRESS=0.0.0.0` and browse to
   `http://NAS-TAILSCALE-IP:8443`. Use Tailscale ACLs to restrict the port.
+- For terminal or Remote-SSH access, connect to the NAS Tailscale address on
+  port `2222` and restrict that port with Tailscale ACLs.
 - Host-side HTTPS: set `BIND_ADDRESS=127.0.0.1`, then configure Tailscale Serve
   on the NAS to proxy `localhost:8443`. Follow the current
   [Tailscale Serve documentation](https://tailscale.com/docs/reference/tailscale-cli/serve).
@@ -175,7 +249,8 @@ the NAS). See the [Cloudflare Tunnel setup guide](https://developers.cloudflare.
 
 Place a Cloudflare Access application and identity policy in front of the
 hostname. Do not create a public DNS route without an access policy and the
-code-server password.
+code-server password. Tailscale is generally simpler for raw SSH; Cloudflare
+SSH requires a separately configured Access TCP/SSH flow.
 
 ## Optional Docker daemon access
 
@@ -251,10 +326,12 @@ To enable publishing:
    - `DOCKERHUB_TOKEN` (use a Docker Hub access token, not your password)
 3. Merge a pull request into `main`. Direct pushes and force pushes are blocked.
 
-Each release builds `linux/amd64` and `linux/arm64`, publishes the exact Git tag
-(`vX.Y.Z`), `latest`, `X.Y.Z`, major/minor, major-only, and commit-SHA tags,
-adds OCI metadata, and creates a build provenance attestation. Manually pushed
-`v*.*.*` tags and manual workflow dispatches are also supported.
+Each release builds `linux/amd64` and `linux/arm64`. The full image receives the
+exact Git tag (`vX.Y.Z`), `latest`, `X.Y.Z`, major/minor, major-only, and
+commit-SHA tags. The slim image receives `slim`, `vX.Y.Z-slim`, matching
+major/minor tags with `-slim`, and a `-slim` SHA tag. Both variants include OCI
+metadata and build provenance. Manually pushed `v*.*.*` tags and manual
+workflow dispatches are also supported.
 
 ## How this differs from GitHub Codespaces
 

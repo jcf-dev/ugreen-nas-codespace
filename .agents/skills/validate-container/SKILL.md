@@ -23,7 +23,8 @@ For Compose changes:
 
 ```bash
 IMAGE_NAME=local/ugreen-nas-codespace:test \
-PASSWORD=test-only-not-for-deployment \
+HASHED_PASSWORD='$$argon2id$$v=19$$m=65536,t=3,p=1$$test$$test' \
+WORKSPACE_PATH=/absolute/existing/test/workspace \
 docker compose -f docker-compose.yml -f compose/build.yml config --quiet
 docker compose -f examples/ugos/docker-compose.yml config --quiet
 ```
@@ -41,18 +42,29 @@ concurrency, secret handling, and reusable-workflow inputs manually.
 
 ## Image checks
 
-For Dockerfile, version, extension, or startup changes, build at least the local
-architecture. Start the container with a test-only password and run
-`make verify`. Confirm `/workspace` is writable for the configured UID/GID and
-the health check reaches `/healthz`.
+For Dockerfile, version, extension, or startup changes, build the `full` and
+`slim` variants on at least the local architecture. Generate a test-only hash
+with `scripts/generate-hashed-password.sh --stdin`, then confirm:
+
+- `PASSWORD` is rejected and a valid `HASHED_PASSWORD` starts code-server.
+- `/workspace` is writable and code-server explicitly opens that directory.
+- The default editor theme is dark and `/healthz` becomes healthy.
+- SSH starts only with a valid public key, accepts the matching key, and rejects
+  password authentication.
+- The full image contains the documented toolchain.
+- The slim image contains core tools, omits bundled AI/Docker/build extras, and
+  retains its deferred AI installer and wrappers.
 
 If both `linux/amd64` and `linux/arm64` were not built, state which architecture
 was omitted. Never infer cross-architecture success from a single local build.
 
 ## Invariants
 
-- Password or hashed-password authentication remains mandatory.
+- Only Argon2i/Argon2id `HASHED_PASSWORD` authentication is accepted;
+  plaintext `PASSWORD` remains rejected.
+- SSH remains non-root and public-key-only.
 - The default container remains non-root.
 - The Docker socket remains opt-in.
 - Cloudflare Tunnel and Tailscale remain outside the image.
 - Persistent paths and the UGOS example remain documented.
+- Full and slim tags remain aligned across both published architectures.
