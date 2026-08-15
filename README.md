@@ -244,10 +244,10 @@ To enable publishing:
    - `DOCKERHUB_TOKEN` (use a Docker Hub access token, not your password)
 3. Merge a pull request into `main`. Direct pushes and force pushes are blocked.
 
-Each release builds `linux/amd64` and `linux/arm64`, publishes `latest`, full
-SemVer, major/minor, major-only, and commit-SHA tags, adds OCI metadata, and
-creates a build provenance attestation. Manually pushed `v*.*.*` tags and manual
-workflow dispatches are also supported.
+Each release builds `linux/amd64` and `linux/arm64`, publishes the exact Git tag
+(`vX.Y.Z`), `latest`, `X.Y.Z`, major/minor, major-only, and commit-SHA tags,
+adds OCI metadata, and creates a build provenance attestation. Manually pushed
+`v*.*.*` tags and manual workflow dispatches are also supported.
 
 ## How this differs from GitHub Codespaces
 
