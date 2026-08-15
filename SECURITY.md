@@ -23,9 +23,11 @@ disclosure depend on severity and upstream dependencies.
 
 ## Deployment security
 
-- Keep code-server password authentication enabled.
+- Keep hash-only code-server authentication enabled; never configure
+  `PASSWORD`.
+- Keep SSH public-key-only and disable it when unused.
 - Use Tailscale or Cloudflare Tunnel with an access policy for remote access.
-- Do not directly forward the IDE port from the public internet.
+- Do not directly forward the IDE or SSH port from the public internet.
 - Treat Docker socket access as root access to the NAS.
 - Use unique credentials and back up persistent volumes securely.
 - Never bake secrets into the image or commit `.env`.

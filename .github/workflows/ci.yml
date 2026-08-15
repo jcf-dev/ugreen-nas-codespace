@@ -16,19 +16,158 @@ jobs:
 
       - name: Validate Compose configuration
         env:
+          HASHED_PASSWORD: '$argon2id$v=19$m=65536,t=3,p=1$Y2ktb25seS1ub3Qtc2VjcmV0$Y2ktb25seS1ub3Qtc2VjcmV0'
           IMAGE_NAME: local/ugreen-nas-codespace:ci
-          PASSWORD: ci-only-password-not-for-deployment
-        run: docker compose -f docker-compose.yml -f compose/build.yml config --quiet
+          WORKSPACE_PATH: /tmp/ugreen-ci-workspace
+        run: |
+          docker compose -f docker-compose.yml -f compose/build.yml config --quiet
+          docker compose -f examples/ugos/docker-compose.yml config --quiet
+
+      - name: Validate shell scripts
+        run: |
+          bash -n scripts/*.sh
+          shellcheck scripts/*.sh
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build amd64 image
+      - name: Build full amd64 image
         uses: docker/build-push-action@v7
         with:
+          build-args: IMAGE_VARIANT=full
           context: .
+          load: true
           platforms: linux/amd64
           push: false
-          tags: local/ugreen-nas-codespace:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: local/ugreen-nas-codespace:ci-full
+          cache-from: |
+            type=gha,scope=full
+            type=gha,scope=slim
+          cache-to: type=gha,mode=max,scope=full
+
+      - name: Test authentication, tools, workspace, and SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if docker run --rm \
+            -e PASSWORD=plaintext-is-forbidden \
+            local/ugreen-nas-codespace:ci-full; then
+            echo "Plaintext PASSWORD was incorrectly accepted" >&2
+            exit 1
+          fi
+
+          hash_line="$(printf '%s' 'ci-only-password-not-for-deployment' | \
+            docker run --rm -i \
+              --entrypoint /usr/local/bin/generate-hashed-password \
+              local/ugreen-nas-codespace:ci-full --stdin)"
+          compose_hash="${hash_line#HASHED_PASSWORD=}"
+          raw_hash="${compose_hash//\$\$/\$}"
+
+          ssh-keygen -q -t ed25519 -N '' -f "${RUNNER_TEMP}/codespace_ci_key"
+          public_key="$(cat "${RUNNER_TEMP}/codespace_ci_key.pub")"
+
+          docker run --detach --name codespace-ci \
+            -e "HASHED_PASSWORD=${raw_hash}" \
+            -e "SSH_AUTHORIZED_KEY=${public_key}" \
+            -p 127.0.0.1::2222 \
+            local/ugreen-nas-codespace:ci-full
+          trap 'docker rm --force codespace-ci >/dev/null 2>&1 || true' EXIT
+
+          for attempt in {1..30}; do
+            if docker exec codespace-ci curl --fail --silent \
+              http://127.0.0.1:8080/healthz >/dev/null; then
+              break
+            fi
+            if [[ "${attempt}" == 30 ]]; then
+              docker logs codespace-ci
+              exit 1
+            fi
+            sleep 2
+          done
+
+          login_status="$(docker exec codespace-ci curl --silent \
+            --output /dev/null --write-out '%{http_code}' \
+            --data-urlencode 'password=ci-only-password-not-for-deployment' \
+            http://127.0.0.1:8080/login)"
+          test "${login_status}" = "302"
+
+          docker exec codespace-ci bash -lc '
+            set -e
+            test -w /workspace
+            touch /workspace/.write-test
+            ! grep -Eq "^[[:space:]]*password[[:space:]]*:" \
+              "$HOME/.config/code-server/config.yaml"
+            code-server --version
+            nvm --version
+            node --version
+            npm --version
+            pnpm --version
+            yarn --version
+            tsc --version
+            python3 --version
+            pipx --version
+            uv --version
+            git --version
+            gh --version
+            docker --version
+            docker buildx version
+            docker compose version
+            claude --version
+            codex --version
+            opencode --version
+          '
+
+          ssh_port="$(docker port codespace-ci 2222/tcp | sed 's/.*://')"
+          ssh -o BatchMode=yes \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -i "${RUNNER_TEMP}/codespace_ci_key" \
+            -p "${ssh_port}" \
+            coder@127.0.0.1 \
+            'test -w /workspace && node --version && python3 --version'
+
+      - name: Build slim amd64 image
+        uses: docker/build-push-action@v7
+        with:
+          build-args: IMAGE_VARIANT=slim
+          context: .
+          load: true
+          platforms: linux/amd64
+          push: false
+          tags: local/ugreen-nas-codespace:ci-slim
+          cache-from: |
+            type=gha,scope=slim
+            type=gha,scope=full
+          cache-to: type=gha,mode=max,scope=slim
+
+      - name: Verify slim image contents
+        run: |
+          docker run --rm --entrypoint /bin/bash \
+            local/ugreen-nas-codespace:ci-slim -lc '
+              set -e
+              code-server --version
+              nvm --version
+              node --version
+              npm --version
+              pnpm --version
+              yarn --version
+              tsc --version
+              python3 --version
+              pipx --version
+              git --version
+              gh --version
+              test ! -x "${NVM_DIR}/current/bin/claude"
+              test ! -x "${NVM_DIR}/current/bin/codex"
+              test ! -x "${NVM_DIR}/current/bin/opencode"
+              test -x /usr/local/bin/claude
+              test -x /usr/local/bin/install-ai-tools
+              test ! -x /usr/bin/docker
+
+              claude --version
+              codex --version
+              opencode --version
+              test -x "$HOME/.local/bin/claude"
+              test -x "$HOME/.local/bin/codex"
+              test -x "$HOME/.local/bin/opencode"
+            '

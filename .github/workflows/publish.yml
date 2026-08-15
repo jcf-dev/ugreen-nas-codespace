@@ -49,6 +49,16 @@ jobs:
   publish:
     needs: credentials
     if: needs.credentials.outputs.configured == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: full
+            suffix: ""
+            floating_tag: latest
+          - variant: slim
+            suffix: -slim
+            floating_tag: slim
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -72,31 +82,33 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/ugreen-nas-codespace
           tags: |
-            type=raw,value=latest
-            type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
-            type=semver,value=${{ inputs.version }},pattern={{version}},enable=${{ inputs.version != '' }}
-            type=semver,value=${{ inputs.version }},pattern={{major}}.{{minor}},enable=${{ inputs.version != '' }}
-            type=semver,value=${{ inputs.version }},pattern={{major}},enable=${{ inputs.version != '' }}
-            type=sha,prefix=sha-
+            type=raw,value=${{ matrix.floating_tag }}
+            type=ref,event=tag,suffix=${{ matrix.suffix }}
+            type=semver,pattern={{version}}${{ matrix.suffix }}
+            type=semver,pattern={{major}}.{{minor}}${{ matrix.suffix }}
+            type=semver,pattern={{major}}${{ matrix.suffix }}
+            type=raw,value=${{ inputs.version }}${{ matrix.suffix }},enable=${{ inputs.version != '' }}
+            type=semver,value=${{ inputs.version }},pattern={{version}}${{ matrix.suffix }},enable=${{ inputs.version != '' }}
+            type=semver,value=${{ inputs.version }},pattern={{major}}.{{minor}}${{ matrix.suffix }},enable=${{ inputs.version != '' }}
+            type=semver,value=${{ inputs.version }},pattern={{major}}${{ matrix.suffix }},enable=${{ inputs.version != '' }}
+            type=sha,prefix=sha-,suffix=${{ matrix.suffix }}
           labels: |
             org.opencontainers.image.licenses=AGPL-3.0-only
             org.opencontainers.image.title=UGREEN NAS Codespace
+            org.opencontainers.image.variant=${{ matrix.variant }}
 
       - name: Build and push multi-architecture image
         id: push
         uses: docker/build-push-action@v7
         with:
+          build-args: IMAGE_VARIANT=${{ matrix.variant }}
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
 
       - name: Attest build provenance
         uses: actions/attest@v4

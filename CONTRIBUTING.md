@@ -20,8 +20,8 @@ and release verification.
 cp .env.example .env
 ```
 
-Set `IMAGE_NAME=ugreen-nas-codespace:local`, choose a non-secret development
-password, then run:
+Set `IMAGE_NAME=ugreen-nas-codespace:local`, create the workspace path, and run
+`./scripts/generate-hashed-password.sh`. Paste its output into `.env`, then run:
 
 ```bash
 docker compose -f docker-compose.yml -f compose/build.yml config --quiet
@@ -42,8 +42,8 @@ whether you tested `linux/amd64`, `linux/arm64`, or only performed static checks
 - Update README and `.env.example` when adding an option.
 - Prefer pinned download sources and verify signatures/checksums where upstream
   provides them.
-- Preserve the password-required default and keep remote-access services outside
-  the application image.
+- Preserve hash-only code-server authentication, key-only SSH, and external
+  tunnel/VPN deployment. Never introduce plaintext password configuration.
 - Do not enable the Docker socket in the default Compose file.
 - Use clear commit messages and add a changelog summary to the pull request.
 
