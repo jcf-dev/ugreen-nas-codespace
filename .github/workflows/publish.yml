@@ -2,11 +2,20 @@ name: Publish container
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: Optional SemVer tag to publish, such as v1.2.3
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: SemVer tag created by the release workflow
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -63,10 +72,13 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/ugreen-nas-codespace
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=semver,value=${{ inputs.version }},pattern={{version}},enable=${{ inputs.version != '' }}
+            type=semver,value=${{ inputs.version }},pattern={{major}}.{{minor}},enable=${{ inputs.version != '' }}
+            type=semver,value=${{ inputs.version }},pattern={{major}},enable=${{ inputs.version != '' }}
             type=sha,prefix=sha-
           labels: |
             org.opencontainers.image.licenses=AGPL-3.0-only
