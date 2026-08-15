@@ -32,6 +32,9 @@ whether you tested `linux/amd64`, `linux/arm64`, or only performed static checks
 ## Pull requests
 
 - Keep changes focused and explain the user-facing reason.
+- Use a Conventional Commit title because squash-merged pull request titles
+  determine the next SemVer release: `feat:` for minor, `fix:` for patch, and
+  `type!:` or `BREAKING CHANGE:` for major.
 - Update README and `.env.example` when adding an option.
 - Prefer pinned download sources and verify signatures/checksums where upstream
   provides them.

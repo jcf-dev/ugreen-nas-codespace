@@ -1,0 +1,88 @@
+name: Semantic release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  attestations: write
+  id-token: write
+
+concurrency:
+  group: semantic-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Create SemVer release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out source and tags
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine next SemVer version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --force --tags
+          latest_tag="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | sed -n '1p')"
+
+          if [[ -z "$latest_tag" ]]; then
+            next_version="v0.1.0"
+          else
+            version="${latest_tag#v}"
+            if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "Unsupported release tag: $latest_tag" >&2
+              exit 1
+            fi
+
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+            subjects="$(git log --format='%s' "$latest_tag..HEAD")"
+            messages="$(git log --format='%s%n%b' "$latest_tag..HEAD")"
+
+            if grep -Eq '^[a-z]+(\([^)]+\))?!:' <<< "$subjects" || \
+              grep -Eq '^BREAKING[ -]CHANGE:' <<< "$messages"; then
+              major=$((major + 1))
+              minor=0
+              patch=0
+            elif grep -Eq '^feat(\([^)]+\))?:' <<< "$subjects"; then
+              minor=$((minor + 1))
+              patch=0
+            else
+              patch=$((patch + 1))
+            fi
+
+            next_version="v${major}.${minor}.${patch}"
+          fi
+
+          echo "version=$next_version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $next_version"
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release create "$VERSION" --target "$GITHUB_SHA" --title "$VERSION" --generate-notes
+
+  publish:
+    name: Publish release image
+    needs: release
+    permissions:
+      contents: read
+      attestations: write
+      id-token: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit

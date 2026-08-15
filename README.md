@@ -52,8 +52,8 @@ public internet.
 
 3. Edit `.env`:
 
-   - Set `IMAGE_NAME` to the published Docker Hub image, such as
-     `your-dockerhub-user/ugreen-nas-codespace:latest`.
+   - Keep `IMAGE_NAME=joweenflores/ugreen-nas-codespace:latest`, or select a
+     published semantic version for reproducible deployments.
    - Replace `PASSWORD` with a long, unique password.
    - Set `PUID` and `PGID` to the owner of the NAS workspace. From SSH, use
      `id` to inspect your user and group IDs.
@@ -227,19 +227,27 @@ three AI CLIs so newly built images receive current releases.
 
 ## Publish to Docker Hub
 
-The repository includes a multi-architecture GitHub Actions workflow.
+Protected merges to `main` automatically create a SemVer tag and GitHub Release,
+then invoke the multi-architecture Docker Hub publishing workflow. Versions
+start at `v0.1.0` and are derived from the squash-merge commit:
 
-1. Create a public Docker Hub repository named `ugreen-nas-codespace`.
+- `type(scope)!:` or a `BREAKING CHANGE:` footer increments the major version.
+- `feat:` increments the minor version.
+- Other changes increment the patch version.
+
+To enable publishing:
+
+1. Create the public Docker Hub repository
+   `joweenflores/ugreen-nas-codespace`.
 2. In the GitHub repository, add Actions secrets:
    - `DOCKERHUB_USERNAME`
    - `DOCKERHUB_TOKEN` (use a Docker Hub access token, not your password)
-3. Push `main` to publish `latest`, or push a semantic tag such as `v0.1.0` to
-   publish versioned tags.
-4. Update `.env.example` and the README examples with your real Docker Hub
-   namespace before the first release.
+3. Merge a pull request into `main`. Direct pushes and force pushes are blocked.
 
-The workflow builds `linux/amd64` and `linux/arm64`, publishes OCI metadata, and
-creates a build provenance attestation.
+Each release builds `linux/amd64` and `linux/arm64`, publishes `latest`, full
+SemVer, major/minor, major-only, and commit-SHA tags, adds OCI metadata, and
+creates a build provenance attestation. Manually pushed `v*.*.*` tags and manual
+workflow dispatches are also supported.
 
 ## How this differs from GitHub Codespaces
 
