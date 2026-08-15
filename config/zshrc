@@ -1,0 +1,17 @@
+# UGREEN NAS Codespace interactive Zsh configuration.
+export NVM_DIR="/usr/local/share/nvm"
+export NVM_SYMLINK_CURRENT=true
+export PATH="$NVM_DIR/current/bin:$HOME/.local/bin:$PATH"
+export HISTFILE="$HOME/.local/state/zsh/history"
+export HISTSIZE=10000
+export SAVEHIST=20000
+
+mkdir -p "${HISTFILE:h}"
+
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
+
+autoload -Uz compinit && compinit
+alias ll='ls -alF'
+alias gs='git status --short --branch'

@@ -1,0 +1,33 @@
+name: ugreen-nas-codespace
+
+services:
+  codespace:
+    image: ${IMAGE_NAME:?Set IMAGE_NAME in .env to your Docker Hub image}
+    container_name: ${CONTAINER_NAME:-ugreen-codespace}
+    hostname: ${CONTAINER_HOSTNAME:-codespace}
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      DOCKER_USER: ${DOCKER_USER:-coder}
+      HASHED_PASSWORD: ${HASHED_PASSWORD:-}
+      PASSWORD: ${PASSWORD:-}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "${BIND_ADDRESS:-0.0.0.0}:${WEB_PORT:-8443}:8080"
+    volumes:
+      - ${WORKSPACE_PATH:-./workspace}:/workspace
+      - codespace-config:/home/coder/.config
+      - codespace-local:/home/coder/.local
+      - codespace-claude:/home/coder/.claude
+      - codespace-codex:/home/coder/.codex
+      - codespace-ssh:/home/coder/.ssh
+      - codespace-gnupg:/home/coder/.gnupg
+    stop_grace_period: 30s
+
+volumes:
+  codespace-config:
+  codespace-local:
+  codespace-claude:
+  codespace-codex:
+  codespace-ssh:
+  codespace-gnupg:

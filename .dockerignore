@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!LICENSE
+!config/
+!config/**
+!scripts/
+!scripts/**

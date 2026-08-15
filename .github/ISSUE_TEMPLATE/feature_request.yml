@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose an improvement to the image or deployment
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Relevant architecture
+      options:
+        - Both amd64 and arm64
+        - amd64
+        - arm64
+        - Not architecture-specific
+    validations:
+      required: true

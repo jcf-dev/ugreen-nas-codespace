@@ -1,0 +1,15 @@
+# Adds a local source build to the deployment-oriented base Compose file.
+services:
+  codespace:
+    build:
+      # Compose resolves override paths from the first file (repository root).
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CODE_SERVER_VERSION: ${CODE_SERVER_VERSION:-4.130.0}
+        UV_VERSION: ${UV_VERSION:-0.11.32}
+        NVM_VERSION: ${NVM_VERSION:-v0.40.6}
+        NODE_VERSION: ${NODE_VERSION:-24}
+        CLAUDE_CODE_VERSION: ${CLAUDE_CODE_VERSION:-latest}
+        CODEX_VERSION: ${CODEX_VERSION:-latest}
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-latest}

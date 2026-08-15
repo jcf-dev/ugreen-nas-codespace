@@ -1,0 +1,22 @@
+# UGREEN NAS Codespace interactive Bash configuration.
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+export NVM_DIR="/usr/local/share/nvm"
+export NVM_SYMLINK_CURRENT=true
+export PATH="$NVM_DIR/current/bin:$HOME/.local/bin:$PATH"
+export HISTFILE="$HOME/.local/state/bash/history"
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+
+mkdir -p "$(dirname "$HISTFILE")"
+
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+[ -r /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook bash)"
+
+alias ll='ls -alF'
+alias gs='git status --short --branch'

@@ -1,0 +1,10 @@
+# UGREEN NAS Codespace login-shell environment.
+export NVM_DIR="/usr/local/share/nvm"
+export NVM_SYMLINK_CURRENT=true
+export PATH="$NVM_DIR/current/bin:$HOME/.local/bin:$PATH"
+
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+if [ -n "${BASH_VERSION:-}" ] && [ -r "$HOME/.bashrc" ]; then
+  . "$HOME/.bashrc"
+fi

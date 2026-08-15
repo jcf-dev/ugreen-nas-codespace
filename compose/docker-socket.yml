@@ -1,0 +1,8 @@
+# Optional and security-sensitive: grants the development container control of
+# the NAS Docker daemon. Read the README before enabling this override.
+services:
+  codespace:
+    group_add:
+      - "${DOCKER_GID:?Set DOCKER_GID to the group ID that owns /var/run/docker.sock}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
