@@ -278,10 +278,10 @@ extensions may be unavailable or licensed only for Microsoft's products.
 
 ## License
 
-Project-authored files are licensed under the GNU Affero General Public License,
-version 3 only (`AGPL-3.0-only`). See [LICENSE](LICENSE).
+Copyright © 2026 Joween Flores and contributors.
 
-Copyright (C) 2026 UGREEN NAS Codespace contributors.
+Licensed under the GNU Affero General Public License version 3 only
+(`AGPL-3.0-only`). See [LICENSE](LICENSE).
 
 Bundled and downloaded tools remain under their respective upstream licenses;
 the AGPL does not relicense those separate works. UGREEN, GitHub, VS Code,
