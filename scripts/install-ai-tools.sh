@@ -48,6 +48,7 @@ trap cleanup EXIT HUP INT TERM
 
 echo "Installing Claude Code, Codex, and OpenCode into ${prefix}..."
 npm install --global --prefix "${prefix}" --no-audit --no-fund \
+  --allow-scripts=@anthropic-ai/claude-code,opencode-ai \
   "${claude_spec}" \
   "${codex_spec}" \
   "${opencode_spec}"
