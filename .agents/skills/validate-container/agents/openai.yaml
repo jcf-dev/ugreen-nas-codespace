@@ -1,0 +1,4 @@
+interface:
+  display_name: "Validate Container"
+  short_description: "Validate Compose, workflows, and images"
+  default_prompt: "Use $validate-container to validate this container change before a pull request."

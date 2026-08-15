@@ -40,6 +40,14 @@ public internet.
 
 ## Deploy a published image on UGREEN NAS
 
+For a point-and-click UGOS Pro deployment, follow the complete
+**[UGOS Pro setup guide](docs/UGOS_SETUP.md)**. It uses the standalone,
+paste-ready **[UGOS Docker Compose example](examples/ugos/docker-compose.yml)**
+and covers storage paths, UID/GID permissions, first login, updates, backups,
+remote access, and troubleshooting.
+
+For an SSH or file-based Compose deployment:
+
 1. Download `docker-compose.yml` and `.env.example` into one directory on the
    NAS.
 2. Copy the environment template and create the workspace:
@@ -71,9 +79,8 @@ public internet.
 
 5. Open `http://NAS-LAN-IP:8443` and enter the password from `.env`.
 
-In UGOS Pro, you can alternatively create a Compose/Project stack in the Docker
-app and paste `docker-compose.yml`. UI labels vary between UGOS releases, but
-the environment variables and volume paths are the same.
+UGOS Pro users who prefer the Project editor should use the dedicated example
+rather than pasting the environment-variable-based root file.
 
 ### Build from source
 
@@ -263,6 +270,7 @@ extensions may be unavailable or licensed only for Microsoft's products.
 ## Project policy
 
 - [Contributing](CONTRIBUTING.md)
+- [UGOS Pro deployment guide](docs/UGOS_SETUP.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security Policy](SECURITY.md)
 - [Support](SUPPORT.md)
