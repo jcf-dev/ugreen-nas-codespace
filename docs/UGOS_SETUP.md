@@ -118,13 +118,33 @@ opens `/workspace`, which is the persistent NAS folder you mounted. Using the
 absolute mount prevents the Project's own `docker-compose.yml` from being
 opened as an accidental, read-only workspace on first launch.
 
-Open the integrated terminal and configure Git and the CLIs you use:
+The editor now asks how to prepare the project in a native VS Code-themed
+chooser:
+
+1. Choose **Blank project** for a fresh folder. This choice never deletes NAS
+   files; if the workspace already contains files, the editor asks before using
+   them as-is.
+2. Choose **Clone from GitHub** to enter `OWNER/REPOSITORY` or a GitHub URL. The
+   workspace must be empty. A terminal opens with a one-time code and browser
+   URL for GitHub sign-in, then clones the repository.
+3. **GitLab** is displayed as coming soon. Choose **Ask me later** if you are
+   not ready.
+
+For private repositories in an organization that enforces SAML SSO, sign in
+through the organization and authorize the GitHub CLI OAuth app when GitHub
+requests it. An organization administrator may need to approve the app. GitHub
+documents this in
+[Authorizing OAuth apps](https://docs.github.com/en/apps/oauth-apps/using-oauth-apps/authorizing-oauth-apps).
+
+To see the project choices again, open the Command Palette and run **UGREEN
+Codespace: Reset First-Run Setup**. The choice is stored in the `.config`
+volume, not in the repository or workspace.
+
+Open the integrated terminal and configure Git and the AI CLIs you use:
 
 ```bash
 git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
-gh auth login
-gh auth setup-git
 claude
 codex
 opencode
@@ -134,6 +154,11 @@ The GitHub, Claude Code, Codex, OpenCode, SSH, GPG, and VS Code data paths are
 stored in Docker named volumes. They survive Project recreation, but deleting
 the named volumes removes that retained configuration and may remove stored
 credentials.
+
+GitHub CLI uses secure credential storage when available and otherwise may
+store its OAuth token in its configuration file. Protect the `.config` volume
+and UGOS administrator account as credential-bearing resources. The deployment
+does not put a GitHub token in Compose.
 
 On the slim image, the first `claude`, `codex`, or `opencode` command installs
 all three tools into the persistent `.local` volume. This one-time download can
@@ -218,6 +243,20 @@ log for a rejected key. Never use a private key as this value.
 
 Confirm the named volumes were preserved when the Project was recreated.
 Reauthenticate the affected CLI if its volume was deleted.
+
+### The first-run project prompt did not appear
+
+Open the Command Palette and run **UGREEN Codespace: Run First-Run Setup**. To
+discard only the saved setup choice and prompt again, run **UGREEN Codespace:
+Reset First-Run Setup**. Neither command deletes workspace files.
+
+### A GitHub private repository will not clone
+
+Confirm your GitHub account can see the repository. If its organization
+enforces SAML SSO, establish an active SSO session and authorize the GitHub CLI
+OAuth app for that organization. Some organizations require administrator
+approval. Move or back up any files already in `/workspace`; onboarding refuses
+to clone over a non-empty folder.
 
 ## Independence notice
 

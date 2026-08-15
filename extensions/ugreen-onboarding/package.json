@@ -1,0 +1,41 @@
+{
+  "name": "ugreen-codespace-onboarding",
+  "displayName": "UGREEN Codespace Onboarding",
+  "description": "First-run workspace setup for UGREEN NAS Codespace.",
+  "version": "1.0.0",
+  "publisher": "jcf-dev",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:ugreenCodespace.runOnboarding",
+    "onCommand:ugreenCodespace.resetOnboarding"
+  ],
+  "main": "./extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "ugreenCodespace.runOnboarding",
+        "title": "UGREEN Codespace: Run First-Run Setup"
+      },
+      {
+        "command": "ugreenCodespace.resetOnboarding",
+        "title": "UGREEN Codespace: Reset First-Run Setup"
+      }
+    ]
+  }
+}

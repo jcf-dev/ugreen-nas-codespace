@@ -30,4 +30,8 @@ disclosure depend on severity and upstream dependencies.
 - Do not directly forward the IDE or SSH port from the public internet.
 - Treat Docker socket access as root access to the NAS.
 - Use unique credentials and back up persistent volumes securely.
+- Treat `/home/coder/.config` as credential-bearing: GitHub CLI may store its
+  OAuth token there when no secure credential store is available.
+- Authenticate GitHub through the interactive browser flow; never add a GitHub
+  token, OAuth client secret, or private-repository credential to Compose.
 - Never bake secrets into the image or commit `.env`.
