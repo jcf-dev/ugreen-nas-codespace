@@ -18,7 +18,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  credentials:
+    name: Check Docker Hub credentials
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - name: Check publishing configuration
+        id: check
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [[ -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Docker Hub publishing skipped: configure DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repository secrets."
+          fi
+
   publish:
+    needs: credentials
+    if: needs.credentials.outputs.configured == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
